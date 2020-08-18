@@ -129,9 +129,11 @@ enum boot_device {
 unsigned char g_AutoSel;	//機種自動判別結果保管。=0:標準、=1:TOYOTA
 
 //TOYOTA向けバージョン情報           123456789012345
-const unsigned char UBOOT_VERT[] = {"1.00T          "};	//TOYOTA version. 
+//const unsigned char UBOOT_VERT[] = {"1.00T          "};	//TOYOTA version. 
+const unsigned char UBOOT_VERT[] = {"1.01T          "};	//TOYOTA version. --> PMUレジスタ値変更<tanaka20200114>
 //標準版バージョン情報               123456789012345
-const unsigned char UBOOT_VER[] =  {"1.01           "};	//Original version. 
+//const unsigned char UBOOT_VER[] =  {"1.01           "};	//Original version. 
+const unsigned char UBOOT_VER[] =  {"1.02           "};	//Original version.  --> PMUレジスタ値変更<tanaka20200114>
 #else	//BSP_SUPPORT_AUTOSELECT <kuri0706> 自動判別対応
 
 #ifdef	BSP_SUPPORT_TOYOTA	//<kuri0426>
@@ -233,6 +235,11 @@ const unsigned char UBOOT_VER[] = {"1.00           "};	//Original version.
 // 標準版とTOYOTA版をキーボードの折り返しで判別する機能の追加。正式版。
 // BSP_SUPPORT_AUTOSELECT が定義されていれば有効。
 // ------------------------------------------------------------------------
+// ver1.02/1.01T-----------------------------------------------------------
+// 2020/01/20
+// PMU_REG_CORE、PMU_REG_3P0の設定処理を追加
+// （ブルースクリーン不具合対策）
+// ------------------------------------------------------------------------
 // NewPP+ 20150727 
 
 #if 1	//<kuri0926>
@@ -257,6 +264,7 @@ void BlinkAllLEDs(int on);
 int os_boot_submain(void);
 
 void SW_LED(int on);	//<kuri0926>
+void print_pmu_reg(void);	//<tanaka20200114>
 
 
 /* -Modified for iMX6Solo_PP at 2015/09/09 by Akita */
@@ -1355,6 +1363,9 @@ static void setup_gpio(void)
 	udelay(10*1000);
 #endif	//<kuri0317>
 
+#if 1	//<tanaka20200114>
+	print_pmu_reg();
+#endif
 }
 
 static void ccm_init(void)
@@ -5364,4 +5375,16 @@ int os_boot_submain(void)
 
 #endif /* IMX6SOLO_PP */
 /* -Modified for iMX6Solo_PP at 2015/08/18 by Akita */
+
+/* <tanaka20200114> */
+void print_pmu_reg(void)
+{
+	struct anatop_regs *anatop = (struct anatop_regs *)ANATOP_BASE_ADDR;
+	u32 reg;
+
+	reg = readl(&anatop->reg_core);
+	printf ("PMU_REG_CORE: 0x%8X\n", reg);
+	reg = readl(&anatop->reg_3p0);
+	printf ("PMU_REG_3P0: 0x%8X\n", reg);
+}
 
